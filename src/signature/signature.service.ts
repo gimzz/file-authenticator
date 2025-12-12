@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class SignatureService {
@@ -11,15 +12,18 @@ export class SignatureService {
   private AES_KEY: Buffer;
   private IV_UNSAFE: Buffer;
 
-  constructor() {
+  constructor(private readonly prisma: PrismaService) {
     this.SECRET_KEY = process.env.SECRET_KEY as string;
     if (!this.SECRET_KEY) {
       throw new Error('SECRET_KEY no está definida en el archivo .env');
     }
-    this.AES_KEY = Buffer.alloc(32, this.SECRET_KEY, 'utf8'); 
-    this.IV_UNSAFE = Buffer.alloc(16, this.SECRET_KEY, 'utf8'); 
+    this.AES_KEY = Buffer.alloc(32, this.SECRET_KEY, 'utf8');
+    this.IV_UNSAFE = Buffer.alloc(16, this.SECRET_KEY, 'utf8');
     const keysPath = path.join(process.cwd(), 'keys');
-    this.privateKey = fs.readFileSync(path.join(keysPath, 'private.key'), 'utf8');
+    this.privateKey = fs.readFileSync(
+      path.join(keysPath, 'private.key'),
+      'utf8',
+    );
     this.publicKey = fs.readFileSync(path.join(keysPath, 'public.key'), 'utf8');
   }
 
@@ -32,10 +36,7 @@ export class SignatureService {
 
     const cipher = crypto.createCipheriv('aes-256-cbc', this.AES_KEY, iv);
 
-    const encrypted = Buffer.concat([
-      cipher.update(text),
-      cipher.final(),
-    ]);
+    const encrypted = Buffer.concat([cipher.update(text), cipher.final()]);
     return Buffer.concat([iv, encrypted]).toString('base64');
   }
 
@@ -51,7 +52,7 @@ export class SignatureService {
     ]).toString();
   }
 
-  signPDF(pdfBuffer: Buffer, unsafeAES = false) {
+  async signFile(pdfBuffer: Buffer, unsafeAES = false) {
     const hash = this.generateHash(pdfBuffer);
     const signature = crypto.sign('sha256', Buffer.from(hash, 'hex'), {
       key: this.privateKey,
@@ -61,20 +62,38 @@ export class SignatureService {
       signature.toString('base64'),
       unsafeAES,
     );
+    await this.prisma.singFile.create({
+      data: {
+        hash,
+        signature: encryptedSignature,
+      },
+    });
     return {
-      hash,
-      signature: encryptedSignature,
+      message: 'El archivo se ha firmado correctamente',
     };
   }
 
-  verifyPDF(pdfBuffer: Buffer, encryptedSignature: string, hash: string, unsafeAES = false): boolean {
-    const decryptedSignatureBase64 = this.decryptAES(encryptedSignature, unsafeAES);
+  async verifyFile(fileBuffer: Buffer, unsafeAES = false) {
+    const currentHash = this.generateHash(fileBuffer);
+    const encryptedSignature = await this.prisma.singFile.findUnique({
+      where: {
+        hash: currentHash,
+      },
+      select: {
+        signature: true,
+      },
+    });
+    if (!encryptedSignature) {
+      return false;
+    }
+    const decryptedSignatureBase64 = this.decryptAES(
+      encryptedSignature.signature,
+      unsafeAES,
+    );
     const signature = Buffer.from(decryptedSignatureBase64, 'base64');
-    const currentHash = this.generateHash(pdfBuffer);
-    if (currentHash !== hash) return false;
     return crypto.verify(
       'sha256',
-      Buffer.from(hash, 'hex'),
+      Buffer.from(currentHash, 'hex'),
       this.publicKey,
       signature,
     );

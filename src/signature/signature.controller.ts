@@ -26,7 +26,7 @@ export class SignatureController {
       });
     }
 
-    const result = this.signatureService.signPDF(file.buffer);
+    const result = this.signatureService.signFile(file.buffer);
 
     return HttpResponse({
       status: 200,
@@ -57,7 +57,7 @@ export class SignatureController {
       });
     }
 
-    const result = this.signatureService.signPDF(pdfBuffer);
+    const result = this.signatureService.signFile(pdfBuffer);
 
     return HttpResponse({
       status: 200,
@@ -68,38 +68,10 @@ export class SignatureController {
 
   @Post('verify')
   @UseInterceptors(FileInterceptor('file'))
-  verify(
-    @UploadedFile() file: Express.Multer.File,
-    @Body() body: VerifyPdfDto,
-  ) {
-    const { hash, signature, pdfBase64 } = body;
-
-    if (!hash || hash.length !== 64) {
-      return HttpResponse({
-        status: 400,
-        data: 'HASH_INVALIDO',
-      });
-    }
-
-    if (!signature) {
-      return HttpResponse({
-        status: 400,
-        data: 'SIGNATURE_REQUERIDA',
-      });
-    }
-
+  async verify(@UploadedFile() file: Express.Multer.File) {
     let pdfBuffer: Buffer;
     if (file) {
       pdfBuffer = file.buffer;
-    } else if (pdfBase64) {
-      try {
-        pdfBuffer = Buffer.from(pdfBase64, 'base64');
-      } catch {
-        return HttpResponse({
-          status: 400,
-          data: 'PDF_BASE64_INVALIDO',
-        });
-      }
     } else {
       return HttpResponse({
         status: 400,
@@ -107,7 +79,7 @@ export class SignatureController {
       });
     }
 
-    const valid = this.signatureService.verifyPDF(pdfBuffer, signature, hash);
+    const valid = await this.signatureService.verifyFile(pdfBuffer);
 
     return HttpResponse({
       status: 200,
