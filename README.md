@@ -1,227 +1,137 @@
-📄 File Authenticator API (V1 – Demo)
+Entiendo perfectamente. El texto anterior tenía mezclados comandos de NestJS con las instrucciones reales del proyecto. He limpiado todo el "ruido", los enlaces externos y las secciones que no querías.
 
-API para firmar y verificar documentos usando criptografía moderna
-(RSA + SHA-256) y almacenamiento de firmas en SQLite con Prisma.
+Aquí tienes el código limpio del `README.md` listo para copiar y pegar:
 
-⚠️ Este repositorio corresponde a la versión V1 (Demo pública).
-La versión V2 (comercial) incluye funcionalidades avanzadas y no es open-source.
+---
 
-🚀 ¿Qué hace esta API?
+# 📄 File Authenticator API
 
-Genera un hash SHA-256 del archivo
+API para **firmar y verificar documentos** usando criptografía (RSA + SHA-256) y almacenamiento de firmas en **SQLite con Prisma**. Soporta procesamiento de archivos físicos y cadenas en formato **Base64**.
 
-Firma el hash usando RSA (clave privada)
+---
 
-Protege la firma mediante cifrado AES
+## 🧱 Tecnologías
 
-Permite verificar:
+* **Framework:** NestJS (Node.js >= 18)
+* **Criptografía:** Crypto (RSA + AES + SHA-256)
+* **Base de Datos:** SQLite + Prisma ORM
+* **Gestión de Archivos:** Multer
 
-✅ Integridad del archivo
+---
 
-✅ Autenticidad de la firma
+## ⚙️ Configuración e Instalación
 
-Funciona con cualquier tipo de archivo
+### 1. Clonar e Instalar
 
-No modifica el archivo original
-
-📌 Ideal para validación técnica, pruebas y demostraciones.
-
-✨ Características (V1)
-
-🔐 Firma digital de archivos
-
-🧾 Verificación de integridad y autenticidad
-
-🔑 Criptografía:
-
-SHA-256 (hash)
-
-RSA (firma digital)
-
-AES (protección de la firma)
-
-📤 Soporte para:
-
-Subida de archivos (multipart/form-data)
-
-Archivos en Base64 (application/json)
-
-🗄️ Persistencia con SQLite + Prisma
-
-⚙️ API construida con NestJS
-
-🧱 Tecnologías
-
-Node.js (>= 18)
-
-NestJS
-
-Crypto (RSA + AES + SHA-256)
-
-Prisma ORM
-
-SQLite
-
-Multer
-
-📦 Requisitos
-
-Antes de empezar asegúrate de tener instalado:
-
-Node.js >= 18
-
-npm o yarn
-
-Git
-
-📥 Clonar el repositorio
+```bash
 git clone https://github.com/gimzz/file-authenticator.git
 cd file-authenticator
-
-📦 Instalar dependencias
 npm install
 
-🔐 Variables de entorno
+```
 
-Crea un archivo .env en la raíz del proyecto:
+### 2. Variables de Entorno
 
-SECRET_KEY=una_clave_super_secreta_y_larga_123456
-DATABASE_URL="file:./prisma/sign.db"
+Crea un archivo llamado `.env` en la raíz del proyecto y agrega lo siguiente:
 
-📌 Notas importantes
+```env
+SECRET_KEY=una_clave_para_aes_de_32_caracteres_minimo
+DATABASE_URL="file:./prisma/sing.db"
 
-SECRET_KEY se usa para AES (mínimo recomendado: 32 caracteres)
+```
 
-SQLite se crea automáticamente
+### 3. Generar Llaves RSA (Firmado)
 
-🔑 Llaves RSA
+Crea una carpeta llamada `keys/` en la raíz y genera el par de llaves:
 
-Crea una carpeta keys/ en la raíz:
-
+```bash
 mkdir keys
-
-
-Genera las llaves:
-
 openssl genrsa -out keys/private.key 2048
 openssl rsa -in keys/private.key -pubout -out keys/public.key
 
-🗄️ Base de datos (Prisma)
+```
 
-Generar cliente Prisma:
+### 4. Inicializar Base de Datos
 
+Ejecuta estos comandos para configurar Prisma y SQLite:
+
+```bash
 npm run db:generate
-
-
-Crear la base de datos:
-
 npm run db:push
 
-▶️ Ejecutar el proyecto
+```
 
-Modo desarrollo:
+---
 
+## ▶️ Ejecución
+
+```bash
+# Modo desarrollo
 npm run start:dev
 
 
-La API quedará disponible en:
 
-http://localhost:3000
+La API estará disponible en: `http://localhost:3000`
 
-🔐 Endpoints principales (V1)
-📌 Firmar archivo
+---
 
-POST /signature/sign/file
+## 🔐 Endpoints Principales
 
-Content-Type: multipart/form-data
+### 📌 Firmar Archivo (File)
 
-Body:
+* **Endpoint:** `POST /signature/sign/file`
+* **Content-Type:** `multipart/form-data`
+* **Body:** `file` (Cualquier archivo: PDF, JPG, PNG, etc.)
 
-file: cualquier tipo de archivo
-(PDF, JPG, PNG, DOC, XLS, PPT, TXT, ZIP, etc.)
+### 📌 Firmar Archivo (Base64)
 
-
-📌 Firmar archivo (Base64)
-
-POST /signature/sign/base64
-
-Content-Type: application/json
-
+* **Endpoint:** `POST /signature/sign/base64`
+* **Content-Type:** `application/json`
+* **Body:**
+```json
 {
-  "fileBuffer64": "JVBERi0xLjQKJ..."
+  "pdfBase64": "JVBERi0xLjQKJ..."
 }
 
-📌 Verificar archivo
+```
 
-POST /signature/verify
 
-Content-Type: multipart/form-data
 
-Body:
+### 📌 Verificar Archivo (File)
 
-file: archivo a verificar
+* **Endpoint:** `POST /signature/verify`
+* **Content-Type:** `multipart/form-data`
+* **Body:** `file` (El archivo que deseas validar)
+
+### 📌 Verificar Archivo (Base64)
+
+* **Endpoint:** `POST /signature/verify`
+* **Content-Type:** `application/json`
+* **Body:**
+```json
+{
+  "pdfBase64": "JVBERi0xLjQKJ..."
+}
+
+```
+
 
 
 ---
 
-### 📌 Verificar Archivo (Base64)
+## 🛠️ ¿Cómo funciona?
 
-```http
-POST /signature/verify
-Content-Type: application/json
-```
+1. **Hasing:** Se obtiene el hash **SHA-256** único del contenido del archivo.
+2. **Firma:** Ese hash se firma con la **Llave Privada** del servidor.
+3. **Cifrado:** La firma se cifra con **AES** (usando la `SECRET_KEY`) y se guarda en la base de datos junto al hash.
+4. **Verificación:** Al recibir un archivo, se busca su hash en la DB, se descifra la firma y se comprueba con la **Llave Pública**. Si el archivo fue alterado, la verificación será negativa.
 
-```json
-{
-  "fileBuffer64": "JVBERi0xLjQKJ..."
-}
-```
+---
 
-📌 Valida que:
+## 👨‍💻 Autor
 
-El archivo no fue modificado
+Desarrollado por **Gimzz**
+✨ Proyecto educativo y demostrativo de firmas digitales.
+Esto es una version **demo** de un proyecto **comercial**. 
 
-La firma corresponde al archivo original
-
-✅ Flujo de verificación
-
-Se calcula el hash SHA-256 del archivo
-
-Se busca la firma asociada en la base de datos
-
-Se descifra la firma (AES)
-
-Se valida con la clave pública RSA
-
-Si el archivo fue modificado → ❌ inválido
-
-🧪 Seguridad
-
-🔒 Cualquier cambio en el archivo invalida la firma
-
-🔐 La verificación siempre depende del hash
-
-📎 El archivo original nunca se modifica
-
-🚧 Limitaciones de esta versión
-
-Esta V1 es solo una demo técnica.
-
-👉 La V2 (comercial) incluye:
-
-Códigos QR de verificación
-
-Verificación pública sin exponer claves
-
-Revocación de documentos
-
-UI pública
-
-Seguridad avanzada
-
-Arquitectura orientada a SaaS
-
-👨‍💻 Autor
-
-Desarrollado por Gimzz
-Proyecto de demostración / portafolio técnico.
+---
