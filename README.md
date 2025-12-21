@@ -1,232 +1,175 @@
-# 📄 File Authenticator API
+📄 File Authenticator API (V1 – Demo)
 
-API REST para **firmar, verificar y revocar documentos y archivos** usando **criptografía moderna (RSA + SHA-256)**, sin modificar el archivo original.
+API para firmar y verificar documentos usando criptografía moderna
+(RSA + SHA-256) y almacenamiento de firmas en SQLite con Prisma.
 
-El sistema permite:
+⚠️ Este repositorio corresponde a la versión V1 (Demo pública).
+La versión V2 (comercial) incluye funcionalidades avanzadas y no es open-source.
 
-* verificar **si un documento existe**
-* verificar **si un archivo fue modificado**
-* validar **integridad y autenticidad**
-* realizar verificación pública mediante **URL y código QR**
-* revocar documentos firmados
+🚀 ¿Qué hace esta API?
 
-Funciona con **cualquier tipo de archivo** (PDF, DOCX, XLSX, imágenes, binarios, etc.) y soporta **multipart/form-data**, **Buffer** y **Base64**.
+Genera un hash SHA-256 del archivo
 
----
+Firma el hash usando RSA (clave privada)
 
-## 🚀 Características principales
+Protege la firma mediante cifrado AES
 
-* 🔐 Firma digital de archivos con **RSA + SHA-256**
-* 🧾 Verificación de integridad **sin alterar el archivo**
-* 📦 Soporte para:
+Permite verificar:
 
-  * Subida de archivos (`multipart/form-data`)
-  * Archivos en Base64 (`application/json`)
-* 🔗 Generación de **URL pública de verificación**
-* 📱 Generación de **Código QR** (no embebido en el archivo)
-* 🚫 Revocación de documentos firmados
-* 🧠 Separación clara entre:
+✅ Integridad del archivo
 
-  * **existencia del documento**
-  * **autenticidad del contenido**
-* ⚠️ Mensajes explícitos para evitar falsa confianza
-* 🧩 Arquitectura desacoplada y orientada a servicios
+✅ Autenticidad de la firma
 
----
+Funciona con cualquier tipo de archivo
 
-## 🧠 Conceptos clave (muy importante)
+No modifica el archivo original
 
-### ❗ El QR y la URL NO validan el archivo
+📌 Ideal para validación técnica, pruebas y demostraciones.
 
-El QR **solo identifica** un documento dentro del sistema.
+✨ Características (V1)
 
-✔️ Confirma:
+🔐 Firma digital de archivos
 
-* que el documento existe
-* que no fue revocado
+🧾 Verificación de integridad y autenticidad
 
-❌ NO confirma:
+🔑 Criptografía:
 
-* que el archivo sea original
-* que no haya sido modificado
+SHA-256 (hash)
 
-👉 **Para validar un archivo real, siempre debe enviarse el archivo original**
+RSA (firma digital)
 
----
+AES (protección de la firma)
 
-## 🧱 Tecnologías
+📤 Soporte para:
 
-* Node.js (>= 18)
-* NestJS
-* TypeScript
-* Crypto (RSA + AES + SHA-256)
-* Prisma ORM
-* SQLite
-* Multer
+Subida de archivos (multipart/form-data)
 
----
+Archivos en Base64 (application/json)
 
-## 📦 Requisitos
+🗄️ Persistencia con SQLite + Prisma
 
-Antes de comenzar asegúrate de tener:
+⚙️ API construida con NestJS
 
-* Node.js >= 18
-* npm
-* Git
-* OpenSSL
+🧱 Tecnologías
 
----
+Node.js (>= 18)
 
-## 📥 Clonar el repositorio
+NestJS
 
-```bash
+Crypto (RSA + AES + SHA-256)
+
+Prisma ORM
+
+SQLite
+
+Multer
+
+📦 Requisitos
+
+Antes de empezar asegúrate de tener instalado:
+
+Node.js >= 18
+
+npm o yarn
+
+Git
+
+📥 Clonar el repositorio
 git clone https://github.com/gimzz/file-authenticator.git
 cd file-authenticator
-```
 
----
-
-## 📦 Instalar dependencias
-
-```bash
+📦 Instalar dependencias
 npm install
-```
 
----
+🔐 Variables de entorno
 
-## 🔐 Variables de entorno
+Crea un archivo .env en la raíz del proyecto:
 
-Crea un archivo `.env`:
-
-```env
 SECRET_KEY=una_clave_super_secreta_y_larga_123456
-PUBLIC_VERIFY_URL=http://localhost:3000/signature/verify
-```
+DATABASE_URL="file:./prisma/sign.db"
 
-### 📌 Notas importantes
+📌 Notas importantes
 
-* `SECRET_KEY` se usa para **cifrado AES** de la firma
-* Se recomienda mínimo **32 caracteres**
-* SQLite se crea automáticamente
+SECRET_KEY se usa para AES (mínimo recomendado: 32 caracteres)
 
----
+SQLite se crea automáticamente
 
-## 🔑 Llaves RSA
+🔑 Llaves RSA
 
-Crear carpeta de llaves:
+Crea una carpeta keys/ en la raíz:
 
-```bash
 mkdir keys
-```
 
-Generar llaves:
 
-```bash
+Genera las llaves:
+
 openssl genrsa -out keys/private.key 2048
 openssl rsa -in keys/private.key -pubout -out keys/public.key
-```
 
----
+🗄️ Base de datos (Prisma)
 
-## 🗄️ Base de datos (Prisma)
+Generar cliente Prisma:
 
-Generar cliente:
-
-```bash
 npm run db:generate
-```
 
-Crear base de datos:
 
-```bash
+Crear la base de datos:
+
 npm run db:push
-```
 
-Para **borrar y recrear todo**:
+▶️ Ejecutar el proyecto
 
-```bash
-npx prisma migrate reset
-```
+Modo desarrollo:
 
----
-
-## ▶️ Ejecutar el proyecto
-
-```bash
 npm run start:dev
-```
 
-API disponible en:
 
-```
+La API quedará disponible en:
+
 http://localhost:3000
-```
+
+🔐 Endpoints principales (V1)
+📌 Firmar archivo
+
+POST /signature/sign/file
+
+Content-Type: multipart/form-data
+
+Body:
+
+file: cualquier tipo de archivo
+(PDF, JPG, PNG, DOC, XLS, PPT, TXT, ZIP, etc.)
+
+
+📌 Firmar archivo (Base64)
+
+POST /signature/sign/base64
+
+Content-Type: application/json
+
+{
+  "fileBuffer64": "JVBERi0xLjQKJ..."
+}
+
+📌 Verificar archivo
+
+POST /signature/verify
+
+Content-Type: multipart/form-data
+
+Body:
+
+file: archivo a verificar
+
 
 ---
 
-# 🔐 Endpoints (explicados en detalle)
+### 📌 Verificar Archivo (Base64)
 
----
-
-## 📌 1. Firmar archivo (multipart)
-
-### `POST /signature/sign/file`
-
-Firma cualquier archivo enviado.
-
-**Content-Type**
-
+```http
+POST /signature/verify
+Content-Type: application/json
 ```
-multipart/form-data
-```
-
-**Body**
-
-```
-file: cualquier archivo (PDF, DOCX, JPG, PNG, ZIP, etc.)
-```
-
-### 🔧 Qué hace internamente
-
-1. Calcula el **hash SHA-256** del archivo
-2. Verifica si ya existe en la base de datos
-3. Si no existe:
-
-   * firma el hash con **RSA**
-   * cifra la firma con **AES**
-   * guarda hash + firma
-4. Genera:
-
-   * ID del documento
-   * URL pública
-   * Código QR
-
-### 📤 Respuesta
-
-Incluye:
-
-* `documentId`
-* `verifyUrl`
-* `qr` (Base64)
-* advertencias de confianza
-
-⚠️ **El QR NO valida el archivo**
-
----
-
-## 📌 2. Firmar archivo (Base64)
-
-### `POST /signature/sign/base64`
-
-Permite firmar archivos enviados como Base64.
-
-**Content-Type**
-
-```
-application/json
-```
-
-**Body**
 
 ```json
 {
@@ -234,115 +177,51 @@ application/json
 }
 ```
 
-### 🔧 Uso recomendado
+📌 Valida que:
 
-* Servicios externos
-* Generadores de PDFs
-* Microservicios
-* Lambdas / workers
+El archivo no fue modificado
 
----
+La firma corresponde al archivo original
 
-## 📌 3. Verificación pública (QR / URL)
+✅ Flujo de verificación
 
-### `GET /signature/verify/:id`
+Se calcula el hash SHA-256 del archivo
 
-Usado por:
+Se busca la firma asociada en la base de datos
 
-* QR
-* enlaces públicos
-* usuarios finales
+Se descifra la firma (AES)
 
-### 🔍 Qué verifica
+Se valida con la clave pública RSA
 
-✔️ El documento existe
-✔️ No está revocado
+Si el archivo fue modificado → ❌ inválido
 
-❌ NO valida el archivo
-❌ NO detecta modificaciones
+🧪 Seguridad
 
-### 📤 Respuesta
+🔒 Cualquier cambio en el archivo invalida la firma
 
-Incluye:
+🔐 La verificación siempre depende del hash
 
-* fecha de firma
-* estado de revocación
-* advertencias claras
+📎 El archivo original nunca se modifica
 
----
+🚧 Limitaciones de esta versión
 
-## 📌 4. Verificación completa con archivo
+Esta V1 es solo una demo técnica.
 
-### `POST /signature/verify/:id/file`
+👉 La V2 (comercial) incluye:
 
-**Content-Type**
+Códigos QR de verificación
 
-```
-multipart/form-data
-```
+Verificación pública sin exponer claves
 
-**Body**
+Revocación de documentos
 
-```
-file: archivo original
-```
+UI pública
 
-### 🔐 Qué valida realmente
+Seguridad avanzada
 
-1. Recalcula el hash del archivo
-2. Lo compara con el hash firmado
-3. Descifra la firma
-4. Valida firma RSA con clave pública
+Arquitectura orientada a SaaS
 
-### ✅ Resultado
+👨‍💻 Autor
 
-✔️ Archivo auténtico
-✔️ No fue modificado
-✔️ Firma válida
-
-👉 **Este es el único endpoint que confirma autenticidad real**
-
----
-
-## 📌 5. Revocar documento
-
-### `POST /signature/revoke/:id`
-
-Revoca un documento firmado.
-
-### 🔧 Qué implica
-
-* El documento deja de ser válido
-* Cualquier verificación futura falla
-* No debe confiarse ningún archivo asociado
-
----
-
-## 🧪 Seguridad
-
-* Cualquier cambio en el archivo invalida el hash
-* La firma depende exclusivamente del contenido
-* El QR **no contiene información sensible**
-* No se expone ninguna clave privada
-
----
-
-## 📂 Modelo de datos
-
-```prisma
-model SignedDocument {
-  id        String   @id @default(uuid())
-  hash      String   @unique
-  signature String
-  createdAt DateTime @default(now())
-  revokedAt DateTime?
-}
-```
-
----
-
-## 👨‍💻 Autor
-
-Desarrollado por **Gimzz**
-Backend Developer — APIs & Security
-
+Desarrollado por Gimzz
+Proyecto de demostración / portafolio técnico.
